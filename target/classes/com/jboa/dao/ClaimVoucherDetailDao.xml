@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jboa.dao.ClaimVoucherDetailDao">
+	<select id="listByClaimVoucherId" parameterType="int" resultType="ClaimVoucherDetail">
+		select id, item, account, description
+		 from biz_claim_voucher_detail
+		 where mainId = #{claimVoucherId}
+		 order by account desc
+	</select>
+	<insert id="save" parameterType="ClaimVoucherDetail">
+		insert into biz_claim_voucher_detail values(null, #{claimVoucher.id}, #{item}, #{account}, #{description})
+	</insert>
+	<delete id="remove" parameterType="int">
+		delete from biz_claim_voucher_detail where mainId = #{id}
+	</delete>
+	<update id="update" parameterType="ClaimVoucherDetail">
+		update biz_claim_voucher_detail set item = #{item}, account = #{account}, description = #{description} where id = #{id}
+	</update>
+</mapper>

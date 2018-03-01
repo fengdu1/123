@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+	"-//Apache Software Foundation//DTD Struts Configuration 2.5//EN"
+	"http://struts.apache.org/dtds/struts-2.5.dtd">
+<struts>
+	<constant name="struts.i18n.encoding" value="utf-8"/>
+	<!-- <constant name="struts.multipart.saveDir" value="d:/files" /> -->
+	<package name="default" extends="json-default">
+		<interceptors>
+			<!-- 配置拦截器 -->
+			<interceptor name="loginInterceptor" class="loginInterceptor">
+				<param name="excludeMethods">login</param>
+			</interceptor>
+			<interceptor name="statusInterceptor" class="statusInterceptor"/>
+			<interceptor-stack name="myDefaultStack">
+				<interceptor-ref name="defaultStack"/>
+				<interceptor-ref name="loginInterceptor"/>
+				<interceptor-ref name="statusInterceptor"/>
+				<interceptor-ref name="fileUpload">
+            		<!-- 配置允许上传的文件类型 -->
+              		<param name="allowedTypes">application/zip,application/msword</param>
+             		<!-- 配置允许上传文件的大小(单位字节) -->
+             		<param name="maximumSize">5120000</param>
+           		</interceptor-ref>
+			</interceptor-stack>
+		</interceptors>
+		
+		<default-interceptor-ref name="myDefaultStack" />
+		
+		<global-results>
+			<result name="login" type="redirect">/login.jsp</result>
+		</global-results>
+	</package>
+</struts>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+  PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+	<settings>
+		<!-- 自动映射全局配置 -->
+		<setting name="autoMappingBehavior" value="FULL"/>
+		<!-- log4J2配置 -->
+		<setting name="logImpl" value="LOG4J2"/>
+	</settings>
+	<typeAliases>
+		<!-- 实体类名别名 -->
+		<typeAlias type="com.jboa.pojo.Position" alias="Position"/>
+		<typeAlias type="com.jboa.pojo.Department" alias="Department"/>
+		<typeAlias type="com.jboa.pojo.Employee" alias="Employee"/>
+		<typeAlias type="com.jboa.pojo.ClaimVoucher" alias="ClaimVoucher"/>
+		<typeAlias type="com.jboa.pojo.CheckResult" alias="CheckResult"/>
+		<typeAlias type="com.jboa.pojo.ClaimVoucherDetail" alias="ClaimVoucherDetail"/>
+	</typeAliases>
+</configuration>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jboa.dao.EmployeeDao">
+	<resultMap id="EmployeeMap" type="Employee">
+		<id property="sn" column="sn"/>
+		<association property="position" javaType="Position">
+			<id property="id" column="positionId"/>
+		</association>
+		<association property="department" javaType="Department">
+			<id property="id" column="departmentId"/>
+			<result property="name" column="departmentName"/>
+		</association>
+	</resultMap>
+
+	<select id="get" parameterType="string" resultMap="EmployeeMap">
+		select e.*, p.*, d.name departmentName 
+		from sys_employee e 
+		inner join sys_position p on p.id = e.positionId 
+		inner join sys_department d on d.id = e.departmentId 
+		where e.sn = #{sn} and e.status = '在职'
+	</select>
+	<select id="getManagerByStaff" parameterType="string" resultMap="EmployeeMap">
+		 select e.*, p.*, d.name departmentName
+		 from sys_employee e
+		 inner join sys_position p on p.id = e.positionId
+		 inner join sys_department d on d.id = e.departmentId
+		 where e.departmentId = (
+		 	select departmentId from sys_employee where sn = #{sn}
+		 ) and e.positionId = (
+		 	select id from sys_position where nameen = 'manager'
+		 ) and e.status = '在职'
+	</select>
+	<select id="getGeneralManager" resultMap="EmployeeMap">
+		select e.*, p.*, d.name departmentName
+		from sys_employee e
+		inner join sys_position p on p.id = e.positionId
+		inner join sys_department d on d.id = e.departmentId
+		where e.positionId = (
+			select id from sys_position where nameen = 'generalmanager'
+		) and e.status = '在职'
+			and e.departmentId = #{departmentId}
+	</select>
+	<select id="getCashier" resultMap="EmployeeMap">
+		select e.*, p.*, d.name departmentName
+		from sys_employee e
+		inner join sys_position p on p.id = e.positionId
+		inner join sys_department d on d.id = e.departmentId
+		where e.positionId = (
+			select id from sys_position where nameen = 'cashier'
+		) and e.status = '在职'
+	</select>
+</mapper>

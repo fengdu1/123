@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<decorators defaultdir="/WEB-INF/template">
+    <!-- 哪些请求路径不需要当前装饰器装饰 -->
+    <excludes>
+        <pattern>/assets/*</pattern>
+        <pattern>/login*</pattern>
+        <pattern>/login.action</pattern>
+    </excludes>
+    
+    <!-- 定义装饰器组件页面 -->
+    <decorator name="top" page="top.jsp" />
+    <decorator name="left" page="left.jsp" />
+    <decorator name="footer" page="footer.jsp" />
+
+	<!-- 定义主装饰器页面 -->
+    <decorator name="main" page="main.jsp">
+        <pattern>/*</pattern>
+    </decorator>
+</decorators>

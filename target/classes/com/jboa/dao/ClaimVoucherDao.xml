@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jboa.dao.ClaimVoucherDao">
+	<resultMap id="ClaimVoucherMap" type="ClaimVoucher">
+		<id property="id" column="id"/>
+		<association property="creator" javaType="Employee">
+			<id property="sn" column="createSn"/>
+			<result property="name" column="createName"/>
+		</association>
+		<association property="nextDeal" javaType="Employee">
+			<id property="sn" column="nextDealSn"/>
+			<result property="name" column="nextDealName"/>
+		</association>
+	</resultMap>
+	<resultMap id="ClaimVoucherMap2" type="ClaimVoucher">
+		<id property="id" column="id"/>
+		<association property="creator" javaType="Employee">
+			<id property="sn" column="createSn"/>
+			<result property="name" column="createName"/>
+			<association property="position" javaType="Position">
+				<id property="id" column="positionId"/>
+			</association>
+			<association property="department" javaType="Department">
+				<id property="id" column="departmentId"/>
+				<result property="name" column="departmentName"/>
+			</association>
+		</association>
+		<association property="nextDeal" javaType="Employee">
+			<id property="sn" column="nextDealSn"/>
+			<result property="name" column="nextDealName"/>
+		</association>
+	</resultMap>
+
+	<sql id="where">
+		<if test="beginTime != null">
+			<![CDATA[ and createTime >= date_format(#{beginTime}, '%Y-%m-%d 00:00:00')]]>
+		</if>
+		<if test="endTime != null">
+			<![CDATA[ and createTime <= date_format(#{endTime},'%Y-%m-%d 00:00:00')]]>
+		</if>
+		<if test="claimVoucher.status != null and claimVoucher.status != ''">
+			 and status = #{claimVoucher.status}
+		</if>
+	</sql>
+	
+	<select id="countByStaff" resultType="int">
+		select count(1) 
+		from biz_claim_voucher
+		where createSn = #{claimVoucher.creator.sn}
+		<include refid="where"/>
+	</select>
+	<select id="countByManager" resultType="int">
+		select count(1)
+		from biz_claim_voucher
+		where createSn in (select sn from sys_employee where departmentId = #{claimVoucher.nextDeal.department.id})
+		 and status != '新创建'
+		<include refid="where"/>
+	</select>
+	<select id="countByGeneralManager" resultType="int">
+		select count(1)
+		from biz_claim_voucher
+		where status != '新创建'
+		<include refid="where"/>
+	</select>
+	<select id="countByCashier" resultType="int">
+		select count(1) 
+		from biz_claim_voucher
+		where 1=1
+		<include refid="where"/>
+	</select>
+	<select id="listByStaff" resultMap="ClaimVoucherMap">
+		select
+		 id, createTime, totalAccount, status, nextDealSn,
+		 (select name from sys_employee where sn = nextDealSn) nextDealName
+		 from biz_claim_voucher
+		 where createSn = #{claimVoucher.creator.sn}
+		 <include refid="where"/>
+		 order by
+		 <if test="claimVoucher.status != null and claimVoucher.status != ''">
+		 	createTime desc
+		</if>
+		<if test="claimVoucher.status == null or claimVoucher.status == ''">
+		 	field(status, '新创建', '已提交', '待审批', '已打回', '已审批', '已付款', '已终止'), createTime desc
+		</if>
+		limit #{begin},#{size}
+	</select>
+	<select id="listByManager" resultMap="ClaimVoucherMap">
+		select id, createTime, totalAccount, status,
+		 createSn, (select name from sys_employee where sn = createSn) createName,
+		 nextDealSn, (select name from sys_employee where sn = nextDealSn) nextDealName
+		 from biz_claim_voucher where createSn in (
+		 select sn from sys_employee where departmentId = #{claimVoucher.nextDeal.department.id}
+		 ) and status != '新创建'
+		<include refid="where"/>
+		 order by
+		<if test="claimVoucher.status != null and claimVoucher.status != ''">
+		 	createTime desc
+		</if>
+		<if test="claimVoucher.status == null or claimVoucher.status == ''">
+		 	field(status, '已提交', '待审批', '已打回', '已审批', '已付款', '已终止'), createTime desc
+		</if>
+		limit #{begin},#{size}
+	</select>
+	<select id="listByGeneralManager" resultMap="ClaimVoucherMap">
+		select id, createTime, totalAccount, status,
+		 createSn, (select name from sys_employee where sn = createSn) createName,
+		 nextDealSn, (select name from sys_employee where sn = nextDealSn) nextDealName
+		 from biz_claim_voucher
+		 where status != '新创建'
+		<include refid="where"/>
+		 order by
+		<if test="claimVoucher.status != null and claimVoucher.status != ''">
+		 	createTime desc
+		</if>
+		<if test="claimVoucher.status == null or claimVoucher.status == ''">
+		 	field(status, '已提交', '待审批', '已打回', '已审批', '已付款', '已终止'), createTime desc
+		</if>
+		limit #{begin},#{size}
+	</select>
+	<select id="listByCashier" resultMap="ClaimVoucherMap">
+		select cv.id, cv.createTime, cv.totalAccount, cv.status,
+		 createSn, creator.name createName,
+		 nextDealSn, nextDeal.name nextDealName
+		 from biz_claim_voucher cv
+		 inner join sys_employee creator on creator.sn = cv.createSn
+		 left join sys_employee nextDeal on nextDeal.sn = cv.nextDealSn
+		 where cv.status in ('已审批', '已付款')
+		<if test="beginTime != null">
+			<![CDATA[ and cv.createTime >= date_format(#{beginTime}, '%Y-%m-%d 00:00:00')]]>
+		</if>
+		<if test="endTime != null">
+			<![CDATA[ and cv.createTime<= date_format(#{endTime},'%Y-%m-%d 00:00:00')]]>
+		</if>
+		<if test="claimVoucher.status != null and claimVoucher.status != ''">
+			 and cv.status = #{claimVoucher.status} order by cv.createTime desc
+		</if>
+		<if test="claimVoucher.status == null or claimVoucher.status == ''">
+		 	or cv.status in ('已审批', '已付款') order by field(cv.status, '已审批', '已付款'), cv.createTime desc
+		</if>
+		limit #{begin},#{size}
+	</select>
+	<insert id="save" useGeneratedKeys="true" keyProperty="id" parameterType="ClaimVoucher">
+		insert into biz_claim_voucher values(null, #{nextDeal.sn}, #{creator.sn}, #{createTime}, #{event}, #{totalAccount}, #{status}, null)
+	</insert>
+	<select id="get" parameterType="int" resultMap="ClaimVoucherMap2">
+		select c.id, c.totalAccount, c.createTime, c.status, c.event,
+		 c.createSn, e1.name createName,
+		 d.id departmentId, d.name departmentName,
+		 p.id positionId, p.namecn, p.nameen,
+		 c.nextDealSn, e2.name nextDealName
+		 from biz_claim_voucher c
+		 inner join sys_employee e1 on e1.sn = c.createSn
+		 left join sys_employee e2 on e2.sn = c.nextDealSn
+		 inner join sys_position p on p.id = e1.positionId
+		 inner join sys_department d on d.id = e1.departmentId
+		 where c.id = #{id}
+	</select>
+	<update id="update" parameterType="ClaimVoucher">
+		update biz_claim_voucher
+		 set
+		 nextDealSn = #{nextDeal.sn},
+		 modifyTime = #{modifyTime},
+		 event = #{event},
+		 totalAccount = #{totalAccount},
+		 status = #{status}
+		 where id = #{id}
+	</update>
+	<update id="update2" parameterType="int">
+		append("update biz_claim_voucher set
+		status = '已提交'
+		where id = #{id};
+	</update>
+	<delete id="remove" parameterType="int">
+		delete from biz_claim_voucher where id = #{id}
+	</delete>
+</mapper>

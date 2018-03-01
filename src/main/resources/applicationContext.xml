@@ -1,0 +1,65 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context
+		http://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/aop
+		http://www.springframework.org/schema/aop/spring-aop.xsd
+		http://www.springframework.org/schema/tx
+		http://www.springframework.org/schema/tx/spring-tx.xsd
+		http://www.springframework.org/schema/jdbc
+		http://www.springframework.org/schema/jdbc/spring-jdbc.xsd">
+	<context:component-scan base-package="com.jboa"/>
+	<!-- 配置数据源连接池(阿里连接池) -->
+	<context:property-placeholder location="classpath:jdbc.properties"/>
+	<bean id="druidDataSource" class="com.alibaba.druid.pool.DruidDataSource" destroy-method="close">
+		<property name="driverClassName" value="${jdbcDriver}"/>
+		<property name="url" value="${jdbcUrl}"/>
+		<property name="username" value="${jdbcUsername}"/>
+		<property name="password" value="${jdbcPassword}"/>
+	</bean>
+	<!-- 配置spring的jdbc模板 -->
+	<bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+		<!-- 构造方法注入 -->
+		<constructor-arg name="dataSource" ref="druidDataSource" />
+	</bean>
+	<!-- 配置mybatis的SqlSessionFactory -->
+	<bean class="org.mybatis.spring.SqlSessionFactoryBean">
+		<!-- 通过setXxx()注入数据源连接池 -->
+		<property name="dataSource" ref="druidDataSource"/>
+		<!-- 通过setXxx()注入mybatis的配置文件 -->
+		<property name="configLocation" value="classpath:mybatis/mybatis-config.xml"/>
+	</bean>
+	<!-- 配置mybatis的Mapper扫描器 --> 
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<!-- 注入mapper的xml文件的存放的包名称 -->
+		<property name="basePackage" value="com.jboa.dao"/>
+	</bean>
+	
+	<!-- 配置事务管理器 -->
+	<bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<constructor-arg name="dataSource" ref="druidDataSource" />
+	</bean>
+	
+	<!-- 配置事务属性 -->
+	<tx:advice id="txAdvice" transaction-manager="txManager">
+		<tx:attributes>
+			<tx:method name="is*" read-only="true"/>
+			<tx:method name="get*" read-only="true"/>
+			<tx:method name="*"/>
+		</tx:attributes>
+	</tx:advice>
+	
+	<!-- 定义事务切面，并织入事务增强 -->
+	<aop:config>
+		<aop:pointcut expression="execution(* com.jboa.service..*(..))" id="servicePointcut"/>
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="servicePointcut"/>
+	</aop:config>
+</beans>

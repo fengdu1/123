@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jboa.dao.CheckResultDao">
+	<resultMap id="CheckResultMap" type="CheckResult">
+		<id property="id" column="id"/>
+		<association property="checker" javaType="Employee">
+			<id property="sn" column="checkerSn"/>
+			<association property="position" javaType="Position">
+				<id property="id" column="positionId"/>
+			</association>
+		</association>
+	</resultMap>
+	
+	<select id="listByClaimVoucherId" parameterType="int" resultMap="CheckResultMap">
+		select r.id, r.checkTime, r.result, r.comment,
+		 r.checkerSn, e.name,
+		 p.id positionId, p.namecn, p.nameen
+		 from biz_check_result r
+		 inner join sys_employee e on e.sn = r.checkerSn
+		 inner join sys_position p on p.id = e.positionId
+		 where r.claimId = #{claimVoucherId}
+		 order by checkTime asc
+	</select>
+	<insert id="save" parameterType="CheckResult">
+		insert into biz_check_result values(null, #{claimVoucher.id}, #{checkTime}, #{checker.sn}, #{result}, #{comment})
+	</insert>
+	<delete id="remove" parameterType="int">
+		delete from biz_check_result where claimId = #{id}
+	</delete>
+</mapper>
